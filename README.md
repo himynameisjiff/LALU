@@ -8,4 +8,4 @@ Synthesized into GDS II file using Openlane 2.
 Can view GDS files at https://gds-viewer.tinytapeout.com
 
 
-ISA further down.
+ISA will be added. ISA and LALU design created by Mr. Mueller.
