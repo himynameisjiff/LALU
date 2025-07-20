@@ -1,3 +1,8 @@
 # LALU
 
-16-Bit ALU. ISA further down.
+16-Bit ALU. 
+
+Created in Logism, then converted to Verilog.
+Synthesized into GDS II file using Openlane 2.
+
+ISA further down.
