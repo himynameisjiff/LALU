@@ -1,89 +1,83 @@
-module LALUTop(
-    input fpgaGlobalClock,
-    input rst_0,
-     // Output for the ALU's main result // Output for internal debug/logisim probes
+/******************************************************************************
+ ** LALUTop                                                                   **
+ ** Top level: clock-tree chain + LALU core + Harvard memory exposure.        **
+ **                                                                           **
+ ** TICK_RELOAD parameterizes the logisimTickGenerator divider so simulation  **
+ ** can run the CPU clock fast (e.g. .TICK_RELOAD(2)) instead of 50,000,000.  **
+ *****************************************************************************/
+module LALUTop #(
+    parameter integer TICK_BITS   = 26,
+    parameter integer TICK_RELOAD = 50000000
+)(
+    input              fpgaGlobalClock,
+    input              rst_0,
+
+    // Architectural register-file state (the four 16-bit registers)
+    output [15:0]      reg0_out,
+    output [15:0]      reg1_out,
+    output [15:0]      reg2_out,
+    output [15:0]      reg3_out,
+
+    // External instruction-memory load port (program loading)
+    input              imem_we,
+    input  [5:0]       imem_waddr,
+    input  [7:0]       imem_wdata,
+
+    // External data-memory port
+    input              dmem_ext_we,
+    input  [5:0]       dmem_ext_waddr,
+    input  [15:0]      dmem_ext_wdata
 );
 
    /*******************************************************************************
-   ** The inputs are defined here                                                **
+   ** Internal nets                                                              **
    *******************************************************************************/
-   // input fpgaGlobalClock; // Already declared in the module header
-   // input rst_0;           // Already declared in the module header
+   wire [15:0]  s_Output_bus_1;          // cyclecounter result (kept internal)
+   wire         s_fpgaTick;
+   wire [4:0]   s_logisimClockTree0;
+   wire [208:0] s_logisimOutputBubbles;
+   wire         s_synthesizedClock;
 
    /*******************************************************************************
-   ** The wires are defined here                                                 **
+   ** Clock-tree chain                                                           **
    *******************************************************************************/
-   (*keep*) wire [15:0]  s_Output_bus_1;
-   (*keep*) wire         s_fpgaTick;
-   (*keep*) wire [4:0]   s_logisimClockTree0;
-   (* keep *) wire [208:0] s_logisimOutputBubbles;
-   (*keep*)wire         s_rst;
-   (*keep*) wire         s_synthesizedClock;
-   (*keep *) wire yuh;
-   // Note: Removed (* keep *) examples as the primary outputs are now connected.
-   // If you have other specific internal signals (like PC or instruction register)
-   // that are not connected to outputs but you still want to preserve,
-   // you would add (* keep *) before their wire/reg declaration.
-
-
-   /*******************************************************************************
-   ** Connect internal signals to external output ports                          **
-   ** This ensures the logic driving these signals is not optimized away.        **
-   *******************************************************************************/
-   //assign alu_result_out = s_Output_bus_1;         // Connects the ALU's main 16-bit result
-   //assign debug_output_bubbles = s_logisimOutputBubbles; // Connects the 209-bit debug/probe bus
-
-   /*******************************************************************************
-   ** All signal adaptations are performed here                                  **
-   *******************************************************************************/
-   //assign s_rst = rst_0; // Connects the top-level reset input to the internal reset wire
-
-   /*******************************************************************************
-   ** The clock tree components are defined here                                 **
-   *******************************************************************************/
-   (*keep*) synthesizedClockGenerator BASE_0 (
-       .FPGAClock(fpgaGlobalClock),
-       .SynthesizedClock(s_synthesizedClock)
+   synthesizedClockGenerator BASE_0 (
+       .FPGAClock        (fpgaGlobalClock),
+       .SynthesizedClock (s_synthesizedClock)
    );
 
-   (*keep*) logisimTickGenerator #(.nrOfBits(26), .reloadValue(50000000))
+   logisimTickGenerator #(.nrOfBits(TICK_BITS), .reloadValue(TICK_RELOAD))
       BASE_1 (
-          .FPGAClock(s_synthesizedClock),
-          .FPGATick(s_fpgaTick)
+          .FPGAClock (s_synthesizedClock),
+          .FPGATick  (s_fpgaTick)
       );
 
-   (*keep*) LogisimClockComponent #(.highTicks(1), .lowTicks(1), .nrOfBits(1), .phase(1))
+   LogisimClockComponent #(.highTicks(1), .lowTicks(1), .nrOfBits(1), .phase(1))
       clk (
-          .clockBus(s_logisimClockTree0),
-          .clockTick(s_fpgaTick),
-          .globalClock(s_synthesizedClock)
+          .clockBus    (s_logisimClockTree0),
+          .clockTick   (s_fpgaTick),
+          .globalClock (s_synthesizedClock)
       );
 
    /*******************************************************************************
-   ** The toplevel component (LALU) is connected here                            **
+   ** CPU core + memory                                                          **
    *******************************************************************************/
-    wire [208:0] dummy_sink;
-   assign dummy_sink = s_logisimOutputBubbles;
-   reg [208:0] internal_debug_reg /* synthesis syn_keep=1 */; // Declare a register
-   always @(posedge fpgaGlobalClock or posedge rst_0) begin // Or s_synthesizedClock
-       if (rst_0)
-           internal_debug_reg <= 0;
-       else
-           internal_debug_reg <= s_logisimOutputBubbles; // Store the value
-   end
-
-   (*keep*) LALU CIRCUIT_0 (
-       .Output_bus_1(s_Output_bus_1),
-       .logisimClockTree0(s_logisimClockTree0),
-       .logisimOutputBubbles(s_logisimOutputBubbles),
-       .rst(rst_0),
-       .clk_in(fpgaGlobalClock)
+   LALU CIRCUIT_0 (
+       .Output_bus_1         (s_Output_bus_1),
+       .logisimClockTree0    (s_logisimClockTree0),
+       .logisimOutputBubbles (s_logisimOutputBubbles),
+       .rst                  (rst_0),
+       .clk_in               (fpgaGlobalClock),
+       .reg0_out             (reg0_out),
+       .reg1_out             (reg1_out),
+       .reg2_out             (reg2_out),
+       .reg3_out             (reg3_out),
+       .imem_we              (imem_we),
+       .imem_waddr           (imem_waddr),
+       .imem_wdata           (imem_wdata),
+       .dmem_ext_we          (dmem_ext_we),
+       .dmem_ext_waddr       (dmem_ext_waddr),
+       .dmem_ext_wdata       (dmem_ext_wdata)
    );
-   (*keep*) sink k(
-    .timing(fpgaGlobalClock),
-    .opp(yuh)
-   );
-
-   // Add any other module instantiations or logic here if not already included above.
 
 endmodule

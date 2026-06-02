@@ -10,7 +10,17 @@ module LALU( Output_bus_1,
              logisimClockTree0,
              logisimOutputBubbles,
              rst,
-             clk_in );
+             clk_in,
+             reg0_out,
+             reg1_out,
+             reg2_out,
+             reg3_out,
+             imem_we,
+             imem_waddr,
+             imem_wdata,
+             dmem_ext_we,
+             dmem_ext_waddr,
+             dmem_ext_wdata );
 
    /*******************************************************************************
    ** The inputs are defined here                                                **
@@ -23,6 +33,24 @@ module LALU( Output_bus_1,
    *******************************************************************************/
    output [15:0]  Output_bus_1;
    output [208:0] logisimOutputBubbles;
+
+   /*******************************************************************************
+   ** Architectural register-file state, exposed for observation                 **
+   *******************************************************************************/
+   output [15:0]  reg0_out;
+   output [15:0]  reg1_out;
+   output [15:0]  reg2_out;
+   output [15:0]  reg3_out;
+
+   /*******************************************************************************
+   ** External memory-load ports                                                 **
+   *******************************************************************************/
+   input         imem_we;        // instruction-memory external write strobe
+   input  [5:0]  imem_waddr;     // instruction-memory external write address
+   input  [7:0]  imem_wdata;     // instruction-memory external write data
+   input         dmem_ext_we;    // data-memory external write strobe
+   input  [5:0]  dmem_ext_waddr; // data-memory external write address
+   input  [15:0] dmem_ext_wdata; // data-memory external write data
 
    /*******************************************************************************
    ** The wires are defined here                                                 **
@@ -76,16 +104,33 @@ module LALU( Output_bus_1,
    wire        s_logisimNet73;
    wire        clkWire;
 
-// Fix for "Warning: Wire LALU.\s_logisimBus42 [X] is used but has no driver."
-    // Connect s_logisimBus42 to a 16-bit constant zero (ground)
-    assign s_logisimBus42 = 16'h0000; // or 16'b0; or 16'd0; for a 16-bit zero
+    wire        s_dmem_we = s_logisimNet37 & logisimClockTree0[2]; // MemWr & tick
 
-    // Fix for "Warning: Wire LALU.\s_logisimBus18 [X] is used but has no driver."
-    // Connect s_logisimBus18 to an 8-bit constant zero (ground)
-    assign s_logisimBus18 = 8'h00;    // or 8'b0; or 8'd0; for an 8-bit zero
+    instruction_memory #(.AW(6), .DW(8)) IMEM (
+        .clk   (clkWire),
+        .raddr (s_logisimBus40[5:0]),
+        .rdata (s_logisimBus18[7:0]),
+        .we    (imem_we),
+        .waddr (imem_waddr),
+        .wdata (imem_wdata)
+    );
 
-    // Fix for "Warning: Wire LALU.\s_logisimNet22 is used but has no driver."
-    // Connect s_logisimNet22 to a single-bit constant zero (ground)
+    data_memory #(.AW(6), .DW(16)) DMEM (
+        .clk       (clkWire),
+        .addr      (s_logisimBus36[5:0]),
+        .wdata     (s_logisimBus53[15:0]),
+        .we        (s_dmem_we),
+        .rdata     (s_logisimBus42[15:0]),
+        .ext_we    (dmem_ext_we),
+        .ext_addr  (dmem_ext_waddr),
+        .ext_wdata (dmem_ext_wdata)
+    );
+
+    assign reg0_out = s_logisimBus55[15:0];
+    assign reg1_out = s_logisimBus48[15:0];
+    assign reg2_out = s_logisimBus66[15:0];
+    assign reg3_out = s_logisimBus67[15:0];
+   //no idea why but net22 needed to be connected as it will dangle
     assign s_logisimNet22 = 1'b0;
     assign clkWire = clk_in;
    /*******************************************************************************
