@@ -104,6 +104,21 @@ module LALU( Output_bus_1,
    wire        s_logisimNet73;
    wire        clkWire;
 
+// ---------------------------------------------------------------------------
+    // Harvard memory subsystem (replaces the constant-zero stubs that the
+    // Logisim FPGA export left where the RAM/ROM used to be).
+    //
+    //   Instruction memory : read-addressed by the PC (s_logisimBus40),
+    //                        feeds the instruction register via s_logisimBus18.
+    //   Data memory        : address = value in register Rs  (s_logisimBus6,
+    //                        the orphaned Sourcesel_3(Rs) output = data[RsVal]);
+    //                        store-data = value in register Rd (s_logisimBus60,
+    //                        Sourcesel_1(Rd)); written when MemWr (s_logisimNet37)
+    //                        is asserted on a tick; read-data returned on
+    //                        s_logisimBus42 (write-back mux input 0).
+    //
+    // ISA: ld Rd,Rs -> Rd = data[RsVal];  st Rd,Rs -> data[RsVal] = Rd.
+    // ---------------------------------------------------------------------------
     wire        s_dmem_we = s_logisimNet37 & logisimClockTree0[2]; // MemWr & tick
 
     instruction_memory #(.AW(6), .DW(8)) IMEM (
@@ -117,8 +132,8 @@ module LALU( Output_bus_1,
 
     data_memory #(.AW(6), .DW(16)) DMEM (
         .clk       (clkWire),
-        .addr      (s_logisimBus36[5:0]),
-        .wdata     (s_logisimBus53[15:0]),
+        .addr      (s_logisimBus6[5:0]),    // reg[Rs] value  (was jmpAdrs s_logisimBus36)
+        .wdata     (s_logisimBus60[15:0]),  // reg[Rd] value  (was reg[Rs] s_logisimBus53)
         .we        (s_dmem_we),
         .rdata     (s_logisimBus42[15:0]),
         .ext_we    (dmem_ext_we),
@@ -126,11 +141,14 @@ module LALU( Output_bus_1,
         .ext_wdata (dmem_ext_wdata)
     );
 
+    // Expose architectural register state (reg0..reg3 = the four 16-bit regs)
     assign reg0_out = s_logisimBus55[15:0];
     assign reg1_out = s_logisimBus48[15:0];
     assign reg2_out = s_logisimBus66[15:0];
     assign reg3_out = s_logisimBus67[15:0];
-   //no idea why but net22 needed to be connected as it will dangle
+
+    // Fix for "Warning: Wire LALU.\s_logisimNet22 is used but has no driver."
+    // Connect s_logisimNet22 to a single-bit constant zero (ground)
     assign s_logisimNet22 = 1'b0;
     assign clkWire = clk_in;
    /*******************************************************************************
