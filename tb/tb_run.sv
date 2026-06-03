@@ -26,11 +26,11 @@ module tb_run;
   reg [5:0] lastpc; reg [15:0] l0,l1,l2,l3; integer i;
   initial begin
     $dumpfile("run.vcd"); $dumpvars(0, tb_run);
-    $readmemh("assembly/program.hex", prog);
+    $readmemh("tb/program.hex", prog);
 
     integer k;
     for (k=0;k<64;k=k+1) dinit[k] = 16'h0000; //in case no memeory loaded
-    $readmemh("assembly/data.hex",    dinit);
+    $readmemh("tb/data.hex",    dinit);
 
     repeat(4) @(negedge clk);
 
