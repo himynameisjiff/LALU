@@ -1,9 +1,5 @@
 /******************************************************************************
- ** LALUTop                                                                   **
- ** Top level: clock-tree chain + LALU core + Harvard memory exposure.        **
- **                                                                           **
- ** TICK_RELOAD parameterizes the logisimTickGenerator divider so simulation  **
- ** can run the CPU clock fast (e.g. .TICK_RELOAD(2)) instead of 50,000,000.  **
+ ** LALUTop **
  *****************************************************************************/
 module LALUTop #(
     parameter integer BYPASS_DIVIDER = 1,

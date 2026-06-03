@@ -21,7 +21,7 @@ module tb_run;
   reg [5:0] lastpc; reg [15:0] l0,l1,l2,l3; integer i;
   initial begin
     $dumpfile("run.vcd"); $dumpvars(0, tb_run);
-    $readmemh("Testbenches/program.hex", prog);
+    $readmemh("tb/program.hex", prog);
     repeat(4) @(negedge clk);
     for (j=0;j<12;j=j+1) load(j[5:0], prog[j]);   // load program via external port
     @(negedge clk); rst=0;
