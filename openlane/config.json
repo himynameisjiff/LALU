@@ -28,7 +28,7 @@
 "/Users/prahalad/LALU/rtl/Sourcesel.v",
 "/Users/prahalad/LALU/rtl/XOR_GATE_ONEHOT.v"
 ],
-    "CLOCK_PERIOD": 30,
+    "CLOCK_PERIOD": 12,
     "PDK": "sky130A",
     "STD_CELL_LIBRARY": "sky130_fd_sc_hd",
     "PNR_SDC_FILE": "/Users/prahalad/LALU/openlane/design.sdc"
