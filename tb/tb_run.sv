@@ -18,12 +18,24 @@ module tb_run;
     begin @(negedge clk); iwa=a; iwd=d; iwe=1; @(negedge clk); iwe=0; end
   endtask
 
+  reg [15:0] dinit [0:63];
+  task dload(input [5:0] a, input [15:0] d);
+    begin @(negedge clk); dwa=a; dwd=d; dwe=1; @(negedge clk); dwe=0; end
+  endtask
+
   reg [5:0] lastpc; reg [15:0] l0,l1,l2,l3; integer i;
   initial begin
     $dumpfile("run.vcd"); $dumpvars(0, tb_run);
     $readmemh("tb/program.hex", prog);
+
+    integer k;
+    for (k=0;k<64;k=k+1) dinit[k] = 16'h0000; //in case no memeory loaded
+    $readmemh("tb/data.hex",    dinit);
+
     repeat(4) @(negedge clk);
+
     for (j=0;j<64;j=j+1) load(j[5:0], prog[j]);   // load program via external port 64 is current lines, change if needed
+    for (j=0;j<64;j=j+1) dload(j[5:0], dinit[j]);
     @(negedge clk); rst=0;
 
     lastpc=6'h3f; l0=0;l1=0;l2=0;l3=0;
