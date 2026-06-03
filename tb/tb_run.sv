@@ -23,7 +23,7 @@ module tb_run;
     $dumpfile("run.vcd"); $dumpvars(0, tb_run);
     $readmemh("tb/program.hex", prog);
     repeat(4) @(negedge clk);
-    for (j=0;j<12;j=j+1) load(j[5:0], prog[j]);   // load program via external port
+    for (j=0;j<64;j=j+1) load(j[5:0], prog[j]);   // load program via external port 64 is current lines, change if needed
     @(negedge clk); rst=0;
 
     lastpc=6'h3f; l0=0;l1=0;l2=0;l3=0;
@@ -39,7 +39,12 @@ module tb_run;
       end
     end
     $display("\nFINAL: r0=%04h r1=%04h r2=%04h r3=%04h", r0,r1,r2,r3);
-    $display("data[1]=%04h (expect 0005)", dut.CIRCUIT_0.DMEM.mem[1]);
+    $display("\n=== Data memory [0..63] ===");
+    for (i=0;i<64;i=i+1) begin
+      if (i % 8 == 0) $write("  [%02d] ", i);
+      $write("%04h ", dut.CIRCUIT_0.DMEM.mem[i]);
+      if (i % 8 == 7) $write("\n");
+    end
     $finish;
   end
 endmodule

@@ -1,0 +1,34 @@
+ldi R1, 1
+ldi R0, 0
+ldi R2, 0
+ldi R3, 1
+add R0, R1
+store R0,R2
+add R2,R3
+add R1,R0
+store R1,R2
+add R2,R3
+add R0, R1
+store R0,R2
+add R2,R3
+add R1,R0
+store R1,R2
+add R2,R3
+add R0, R1
+store R0,R2
+add R2,R3
+add R1,R0
+store R1,R2
+add R2,R3
+add R0, R1
+store R0,R2
+add R2,R3
+add R1,R0
+store R1,R2
+add R2,R3
+add R0, R1
+store R0,R2
+add R2,R3
+add R1,R0
+store R1,R2
+halt
