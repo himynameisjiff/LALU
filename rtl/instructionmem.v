@@ -24,13 +24,9 @@ module instruction_memory #(
     reg [DW-1:0] mem [0:DEPTH-1];
 
     integer i;
-    reg [1023:0] init_file;
     initial begin
         for (i = 0; i < DEPTH; i = i + 1)
             mem[i] = {DW{1'b0}};
-        // Simulation convenience: +IMEM_INIT=program.hex loads a hex image.
-        if ($value$plusargs("IMEM_INIT=%s", init_file))
-            $readmemh(init_file, mem);
     end
 
     always @(posedge clk)
