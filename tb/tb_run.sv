@@ -2,6 +2,7 @@
 // Execute a real program and trace instruction-by-instruction.
 module tb_run;
   localparam TICK = 2;
+  localparam integer MAX_CYCLES = 100000;
   reg clk=0, rst=1; always #5 clk=~clk;
   wire [15:0] r0,r1,r2,r3;
   reg iwe=0; reg[5:0] iwa=0; reg[7:0] iwd=0;
@@ -24,12 +25,16 @@ module tb_run;
   endtask
 
   reg [5:0] lastpc; reg [15:0] l0,l1,l2,l3; integer i;
+  integer cyc;
+  wire halt = dut.CIRCUIT_0.s_logisimNet30;        // Halt from addsubcheck
   initial begin
     $dumpfile("run.vcd"); $dumpvars(0, tb_run);
     $readmemh("tb/program.hex", prog);
 
-    integer k;
-    for (k=0;k<64;k=k+1) dinit[k] = 16'h0000; //in case no memeory loaded
+    begin : zero_d
+      integer k;
+      for (k=0;k<64;k=k+1) dinit[k] = 16'h0000; // in case no memory loaded
+    end
     $readmemh("tb/data.hex",    dinit);
 
     repeat(4) @(negedge clk);
@@ -38,19 +43,22 @@ module tb_run;
     for (j=0;j<64;j=j+1) dload(j[5:0], dinit[j]);
     @(negedge clk); rst=0;
 
-    lastpc=6'h3f; l0=0;l1=0;l2=0;l3=0;
-    $display(" time     PC  fetched IR  | r0   r1   r2   r3");
-    for (i=0;i<160;i=i+1) begin
+    cyc=0; lastpc=6'h3f; l0=0;l1=0;l2=0;l3=0;
+    $display(" cycle   time     PC  fetched IR  | r0   r1   r2   r3");
+    while (!halt && cyc < MAX_CYCLES) begin
       @(posedge clk);
+      cyc = cyc + 1;
       if (dut.CIRCUIT_0.s_logisimBus40 !== lastpc ||
           r0!==l0||r1!==l1||r2!==l2||r3!==l3) begin
-        $display("%6t   %02h    %02h   %02h | %04h %04h %04h %04h",
-          $time, dut.CIRCUIT_0.s_logisimBus40, dut.CIRCUIT_0.s_logisimBus18,
+        $display("%6d %6t   %02h    %02h   %02h | %04h %04h %04h %04h",
+          cyc, $time, dut.CIRCUIT_0.s_logisimBus40, dut.CIRCUIT_0.s_logisimBus18,
           dut.CIRCUIT_0.s_logisimBus21, r0,r1,r2,r3);
         lastpc=dut.CIRCUIT_0.s_logisimBus40; l0=r0;l1=r1;l2=r2;l3=r3;
       end
     end
-    $display("\nFINAL: r0=%04h r1=%04h r2=%04h r3=%04h", r0,r1,r2,r3);
+    if (halt) $display("\nHALT asserted -- program completed in %0d cycles.", cyc);
+    else      $display("\nTIMEOUT after %0d cycles (no Halt -- add 0xF6 to end your program).", cyc);
+    $display("FINAL: r0=%04h r1=%04h r2=%04h r3=%04h", r0,r1,r2,r3);
     $display("\n=== Data memory [0..63] ===");
     for (i=0;i<64;i=i+1) begin
       if (i % 8 == 0) $write("  [%02d] ", i);
