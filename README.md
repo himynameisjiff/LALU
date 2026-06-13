@@ -36,3 +36,87 @@ Bit layout: `[7:2] = target PC`, `[1:0] = opcode`
 |-------------|-----------|-------|--------------|-----------------------|
 | jump        | target PC | 00    | `jmp label`  | PC = target PC        |
 | jumpNeg     | target PC | 01    | `jmpn label` | if r < 0, PC = target PC |
+
+
+## Writing and Running Your Own Program
+
+### 1. Instruction encoding
+
+Every instruction is one 8-bit byte. There are two formats.
+
+**Register format** — `[7:6] = Rd`, `[5:4] = Rs` (or `val`), `[3:0] = opcode`:
+
+| Instr | opcode `[3:0]` | Effect              |
+|-------|----------------|---------------------|
+| add   | `0010`         | Rd = Rd + Rs        |
+| sub   | `0011`         | Rd = Rd - Rs        |
+| ldi   | `1110`         | Rd = val (0–3 only)  |
+| ld    | `1111`         | Rd = data[Rs]       |
+| mov   | `0110`         | Rd = Rs             |
+| st    | `1011`         | data[Rs] = Rd       |
+
+**Jump format** — `[7:2] = target PC`, `[1:0] = opcode`:
+
+| Instr | opcode `[1:0]` | Effect                          |
+|-------|----------------|---------------------------------|
+| jmp   | `00`           | PC = target                     |
+| jmpn  | `01`           | if last result < 0, PC = target |
+
+**Special bytes:**
+
+- `nop`  = `0x06`  (`mov R0,R0`)
+- `halt` = `0xF6`  (`mov R3,R3`) — stops the CPU
+
+To encode a register-format byte by hand: `byte = (Rd << 6) | (Rs << 4) | opcode`.
+Example: `add R1,R2` = `(1<<6)|(2<<4)|0x2` = `0x62`.
+
+### 2. Important Notes
+- **There is a 2-cycle fetch/decode latency.** A register write lands ~2 cycles after its instruction is fetched. This also means the two instructions after a taken branch are still fetched
+- **Memory is 64 words.** Instruction memory is 64 × 8-bit; data memory is 64 × 16-bit. The 64 can be changed to your necessity in the testbench
+
+### 3. Assemble
+
+Write your program in assembly, then assemble it to hex with the assembler script:
+
+```bash
+python3 <assembler.py>
+```
+
+It prints a "Program Memory" block, one hex byte per line.
+
+### 4. Load into program.hex
+
+Copy the assembler's output into `tb/program.hex`, one 2-digit hex byte per line:
+
+```
+6E
+BE
+62
+...
+F6
+F6
+F6
+```
+
+(Optional) To preload data memory, put 16-bit words — four hex digits each, one per line — into `tb/data.hex`. Leave it empty to start with all-zero data memory.
+
+### 5. Run the simulation
+
+From the repository root:
+
+```bash
+iverilog -g2012 -s tb_run -o simv3 rtl/*.v tb/tb_run.sv
+vvp simv3
+```
+
+The testbench loads the program, runs until `Halt` asserts, then prints a per-instruction trace, the final register values, the cycle count, and a dump of data memory `[0..63]`. View the waveform with `gtkwave run.vcd`.
+
+Example output tail:
+
+```
+HALT asserted -- program completed in 36 cycles.
+FINAL: r0=0037 r1=0059 r2=0009 r3=0001
+=== Data memory [0..63] ===
+  [00] 0001 0002 0003 0005 0008 000d 0015 0022
+  [08] 0037 0059 0000 ...
+```
