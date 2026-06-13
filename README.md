@@ -67,9 +67,6 @@ Every instruction is one 8-bit byte. There are two formats.
 - `nop`  = `0x06`  (`mov R0,R0`)
 - `halt` = `0xF6`  (`mov R3,R3`) — stops the CPU
 
-To encode a register-format byte by hand: `byte = (Rd << 6) | (Rs << 4) | opcode`.
-Example: `add R1,R2` = `(1<<6)|(2<<4)|0x2` = `0x62`.
-
 ### 2. Important Notes
 - **There is a 2-cycle fetch/decode latency.** A register write lands ~2 cycles after its instruction is fetched. This also means the two instructions after a taken branch are still fetched
 - **Memory is 64 words.** Instruction memory is 64 × 8-bit; data memory is 64 × 16-bit. The 64 can be changed to your necessity in the testbench
@@ -79,7 +76,7 @@ Example: `add R1,R2` = `(1<<6)|(2<<4)|0x2` = `0x62`.
 Write your program in assembly, then assemble it to hex with the assembler script:
 
 ```bash
-python3 <assembler.py>
+python3 assembler.py
 ```
 
 It prints a "Program Memory" block, one hex byte per line.
@@ -105,8 +102,8 @@ F6
 From the repository root:
 
 ```bash
-iverilog -g2012 -s tb_run -o simv3 rtl/*.v tb/tb_run.sv
-vvp simv3
+iverilog -g2012 -s tb_run -o simv rtl/*.v tb/tb_run.sv
+vvp simv
 ```
 
 The testbench loads the program, runs until `Halt` asserts, then prints a per-instruction trace, the final register values, the cycle count, and a dump of data memory `[0..63]`. View the waveform with `gtkwave run.vcd`.
