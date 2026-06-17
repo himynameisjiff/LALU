@@ -65,7 +65,7 @@ Every instruction is one 8-bit byte. There are two formats.
 **Special bytes:**
 
 - `nop`  = `0x06`  (`mov R0,R0`)
-- `halt` = `0xF6`  (`mov R3,R3`) — stops the CPU
+- `halt` = `0xF6`  (`mov R3,R3`) — halts the CPU
 
 ### 2. Important Notes
 - **There is a 2-cycle fetch/decode latency.** A register write occurs 2 cycles after its instruction is fetched. This also means the two instructions after a taken branch are still fetched
