@@ -95,8 +95,6 @@ F6
 F6
 ```
 
-(Optional) To preload data memory, put 16-bit words — four hex digits each, one per line — into `tb/data.hex`. Leave it empty to start with all-zero data memory.
-
 ### 5. Run the simulation
 
 From the repository root:
