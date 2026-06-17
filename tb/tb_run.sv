@@ -57,7 +57,7 @@ module tb_run;
       end
     end
     if (halt) $display("\nHALT asserted -- program completed in %0d cycles.", cyc);
-    else      $display("\nTIMEOUT after %0d cycles (no Halt -- add 0xF6 to end your program).", cyc);
+    else      $display("\nTIMEOUT after %0d cycles (no Halt detected).", cyc);
     $display("FINAL: r0=%04h r1=%04h r2=%04h r3=%04h", r0,r1,r2,r3);
     $display("\n=== Data memory [0..63] ===");
     for (i=0;i<64;i=i+1) begin

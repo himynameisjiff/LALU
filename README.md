@@ -106,7 +106,7 @@ iverilog -g2012 -s tb_run -o simv rtl/*.v tb/tb_run.sv
 vvp simv
 ```
 
-The testbench loads the program, runs until `Halt` asserts, then prints a per-instruction trace, the final register values, the cycle count, and a dump of data memory `[0..63]`. View the waveform with `gtkwave run.vcd`.
+The testbench loads the program, runs until `Halt` asserts, then prints a per-instruction trace, the final register values, the cycle count, and a dump of data memory `[0..63]` The dump can be removed by commenting it out in tb_run.sv. This is recommended for longer programs, it serves as more of a debug tool. View the waveform with `gtkwave run.vcd` <- Doesn't work on MacOS currently, trying to debug>.
 
 Example output tail:
 
