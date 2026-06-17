@@ -8,7 +8,7 @@ Synthesized into GDS II file using Openlane 2.
 Can view GDS files at https://gds-viewer.tinytapeout.com
 
 
-ISA and LALU design created by Mr. Mueller.
+ISA,LALU design, and assembler.py created by Mr. Mueller.
 
 ## Instruction Set
 
