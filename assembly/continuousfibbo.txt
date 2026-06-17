@@ -1,0 +1,11 @@
+ldi R0, 0
+ldi R1, 1
+ldi R2, 0
+ldi R3 , 1
+main: add R0,R1
+store R1,R2
+add R2,R3
+add R1,R0
+add R2,R3
+jump main
+store R1,R2

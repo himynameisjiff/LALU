@@ -2,7 +2,7 @@
 // Execute a real program and trace instruction-by-instruction.
 module tb_run;
   localparam TICK = 2;
-  localparam integer MAX_CYCLES = 100000;
+  localparam integer MAX_CYCLES = 63;
   reg clk=0, rst=1; always #5 clk=~clk;
   wire [15:0] r0,r1,r2,r3;
   reg iwe=0; reg[5:0] iwa=0; reg[7:0] iwd=0;
