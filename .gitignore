@@ -3,3 +3,6 @@ simv2
 openlane/runs/*
 simv3
 run.vcd
+run.vcd
+simv
+run.vcd
